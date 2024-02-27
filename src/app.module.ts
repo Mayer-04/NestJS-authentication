@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -16,7 +16,7 @@ import { envs, validationEnv } from './config';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         const mongoConfig = configService.get<string>('MONGO_URI');
-
+        Logger.log(`Connecting to MongoDB`);
         return {
           uri: mongoConfig,
         };
