@@ -35,7 +35,7 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginDto): Promise<LoginResponse | null> {
+  async login(loginDto: LoginDto): Promise<LoginResponse> {
     const { email, password } = loginDto;
 
     const findByEmail = await this.findByEmail(email);

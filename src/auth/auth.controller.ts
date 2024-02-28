@@ -1,6 +1,12 @@
-import { Body, ConflictException, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  ConflictException,
+  Controller,
+  Post,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dtos';
+import { LoginDto, RegisterDto } from './dtos';
 import { UserEntity } from './entities/user.entity';
 
 @Controller('auth')
@@ -18,7 +24,20 @@ export class AuthController {
   }
 
   @Post('login')
-  async login() {
-    return 'Login';
+  async login(
+    @Body() loginDto: LoginDto,
+  ): Promise<{ user: UserEntity; token: string }> {
+    const loginUser = await this.authService.login(loginDto);
+
+    const { user, isMatch, token } = loginUser;
+
+    if (!user) throw new UnauthorizedException('Invalid credentials');
+
+    if (!isMatch) throw new UnauthorizedException('Invalid credentials');
+
+    return {
+      user,
+      token,
+    };
   }
 }
