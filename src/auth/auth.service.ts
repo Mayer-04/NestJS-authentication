@@ -5,7 +5,7 @@ import { Model } from 'mongoose';
 import { LoginDto, RegisterDto } from './dtos';
 import { UserEntity } from './entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import { hash, compare } from 'bcrypt';
 import { LoginResponse } from './interfaces/login-response';
 
 @Injectable()
@@ -23,12 +23,12 @@ export class AuthService {
     const { name, email, password } = registerDto;
 
     const saltOrRounds = 10;
-    const hash = await bcrypt.hash(password, saltOrRounds);
+    const hashPassword = await hash(password, saltOrRounds);
 
     const newUser = {
       name,
       email,
-      password: hash,
+      password: hashPassword,
     };
 
     const user = await this.userModel.create(newUser);
@@ -40,7 +40,7 @@ export class AuthService {
 
     const findByEmail = await this.findByEmail(email);
 
-    const isMatch = await bcrypt.compare(password, findByEmail.password);
+    const isMatch = await compare(password, findByEmail.password);
 
     const payload = {
       name: findByEmail.name,

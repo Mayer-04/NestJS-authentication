@@ -3,11 +3,13 @@ import {
   ConflictException,
   Controller,
   Post,
+  Res,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dtos';
 import { UserEntity } from './entities/user.entity';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -26,6 +28,7 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<{ user: UserEntity; token: string }> {
     const loginUser = await this.authService.login(loginDto);
 
@@ -34,6 +37,8 @@ export class AuthController {
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
+
+    res.cookie('jwt', token, { httpOnly: true });
 
     return {
       user,
