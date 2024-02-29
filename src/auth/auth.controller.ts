@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dtos';
 import { UserEntity } from './entities/user.entity';
 import { Response } from 'express';
+import { TOKEN_NAME } from './constants/jwt-constants';
 
 @Controller('auth')
 export class AuthController {
@@ -34,11 +35,11 @@ export class AuthController {
 
     const { user, isMatch, token } = loginUser;
 
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!isMatch) {
+      throw new UnauthorizedException('Invalid password');
+    }
 
-    if (!isMatch) throw new UnauthorizedException('Invalid credentials');
-
-    res.cookie('jwt', token, { httpOnly: true });
+    res.cookie(TOKEN_NAME, token, { httpOnly: true });
 
     return {
       user,

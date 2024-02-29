@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schema/user.schema';
 import { Model } from 'mongoose';
 import { LoginDto, RegisterDto } from './dtos';
 import { UserEntity } from './entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
-import { hash, compare } from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 import { LoginResponse } from './interfaces/login-response';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async findByEmail(email: string): Promise<UserEntity | null> {
+  async findByEmail(email: string): Promise<UserEntity> {
     const user = await this.userModel.findOne({ email }).exec();
     return user;
   }
@@ -23,7 +23,7 @@ export class AuthService {
     const { name, email, password } = registerDto;
 
     const saltOrRounds = 10;
-    const hashPassword = await hash(password, saltOrRounds);
+    const hashPassword = await bcrypt.hash(password, saltOrRounds);
 
     const newUser = {
       name,
@@ -35,20 +35,24 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginDto): Promise<LoginResponse> {
+  async login(loginDto: LoginDto): Promise<LoginResponse | null> {
     const { email, password } = loginDto;
 
-    const findByEmail = await this.findByEmail(email);
+    const user = await this.findByEmail(email);
 
-    const isMatch = await compare(password, findByEmail.password);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
 
     const payload = {
-      name: findByEmail.name,
-      email: findByEmail.email,
+      name: user.name,
+      email: user.email,
     };
 
     const token = await this.jwtService.signAsync(payload);
 
-    return { user: findByEmail, token, isMatch };
+    return { user, token, isMatch };
   }
 }
