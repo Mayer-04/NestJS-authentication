@@ -6,7 +6,7 @@ import { LoginDto, RegisterDto } from './dtos';
 import { UserEntity } from './entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { LoginResponse } from './interfaces/login-response';
+import { LoginServiceResponse } from './interfaces';
 
 @Injectable()
 export class AuthService {
@@ -15,8 +15,12 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async findByEmail(email: string): Promise<UserEntity> {
-    const user = await this.userModel.findOne({ email }).exec();
+  async findByEmail(email: string): Promise<UserEntity | null> {
+    const user = await this.userModel
+      .findOne({ email })
+      .select('-createdAt -updatedAt')
+      .exec();
+
     return user;
   }
   async register(registerDto: RegisterDto): Promise<UserEntity> {
@@ -35,7 +39,7 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginDto): Promise<LoginResponse | null> {
+  async login(loginDto: LoginDto): Promise<LoginServiceResponse> {
     const { email, password } = loginDto;
 
     const user = await this.findByEmail(email);
@@ -47,6 +51,7 @@ export class AuthService {
     const isMatch = await bcrypt.compare(password, user.password);
 
     const payload = {
+      id: user._id,
       name: user.name,
       email: user.email,
     };

@@ -14,6 +14,7 @@ import { UserEntity } from './entities/user.entity';
 import { Response } from 'express';
 import { TOKEN_NAME } from './constants/jwt-constants';
 import { AuthGuard } from './guards/auth.guard';
+import { LoginControllerResponse } from './interfaces';
 
 @Controller('auth')
 export class AuthController {
@@ -33,10 +34,16 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<{ user: UserEntity; token: string }> {
+  ): Promise<LoginControllerResponse> {
     const loginUser = await this.authService.login(loginDto);
 
     const { user, isMatch, token } = loginUser;
+
+    const loginResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+    };
 
     if (!isMatch) {
       throw new UnauthorizedException('Invalid password');
@@ -45,7 +52,7 @@ export class AuthController {
     res.cookie(TOKEN_NAME, token, { httpOnly: true });
 
     return {
-      user,
+      user: loginResponse,
       token,
     };
   }
