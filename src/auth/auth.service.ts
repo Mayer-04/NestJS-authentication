@@ -55,4 +55,9 @@ export class AuthService {
 
     return { user, token, isMatch };
   }
+
+  async findAll(): Promise<UserEntity[]> {
+    const users = await this.userModel.find().exec();
+    return users;
+  }
 }

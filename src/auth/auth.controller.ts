@@ -2,15 +2,18 @@ import {
   Body,
   ConflictException,
   Controller,
+  Get,
   Post,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dtos';
 import { UserEntity } from './entities/user.entity';
 import { Response } from 'express';
 import { TOKEN_NAME } from './constants/jwt-constants';
+import { AuthGuard } from './guards/auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -45,5 +48,12 @@ export class AuthController {
       user,
       token,
     };
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('users')
+  async getAllUsers(): Promise<UserEntity[]> {
+    const users = await this.authService.findAll();
+    return users;
   }
 }
